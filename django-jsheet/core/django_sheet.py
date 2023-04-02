@@ -64,6 +64,7 @@ class DjangoSheet:
         self.empty_row = empty_row
 
         self.set_header = []
+        self.set_header2 = self.set_header
 
     @property
     def len_row(self):
@@ -96,6 +97,13 @@ class DjangoSheet:
             if isinstance(self.colWidths, list):
                 colWidths = self.colWidths
         return colWidths
+
+    @property
+    def set_header2(self):
+        data = []
+        for label, field in self.jquery[1].items():
+            data.append((label, field.__class__.__name__))
+        return data
 
     @property
     def dict_jsheet(self):
