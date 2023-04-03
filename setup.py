@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fn:
 
 setup(
     name="django-jsheet",
-    version="0.1.6",
+    version="0.1.8",
     packages=find_packages("django-jsheet"),
     package_dir={'': 'django-jsheet'},
     description="Django JSheet",
@@ -14,9 +14,9 @@ setup(
     author="ShadMod",
     author_email="support@shadmod.it",
     license="MIT License",
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     url="https://github.com/shadMod/django-jsheet",
-    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.6.tar.gz",
+    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.8.tar.gz",
     keywords=[
         "Django JSheet",
         "Django-JSheet",
