@@ -1,18 +1,25 @@
-from distutils.core import setup
+import pathlib
+
+from setuptools import setup, find_packages
+
+DIR_ = pathlib.Path(__file__).parent
+README = (DIR_ / "README.md").read_text()
 
 setup(
     name="django-jsheet",
-    packages=["django-jsheet"],
+    packages=find_packages("django-jsheet"),
+    package_dir={'': 'django-jsheet'},
     version="0.1.0",
     license="MIT License",
     description="Django JSheet",
+    long_description=README,
+    long_description_content_type="text/markdown",
     author="ShadMod",
     author_email="support@shadmod.it",
     url="https://github.com/shadMod/django-jsheet",
-    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.0.1.tar.gz",
+    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.0.tar.gz",
     keywords=[
-        "Django",
-        "JSheet",
+        "Django JSheet",
         "Django-JSheet",
         "Django_JSheet",
     ],
