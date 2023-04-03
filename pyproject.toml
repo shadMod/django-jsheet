@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "django-jsheet"
+version = "0.1.9"
+authors = [
+    { name = "ShadMod", email = "support@shadmod.it" },
+]
+maintainers = [
+    { name = "Brett Cannon", email = "brett@python.org" }
+]
+description = "A small example package"
+readme = "README.md"
+keywords = [
+    "Django JSheet",
+    "Django-JSheet",
+    "Django_JSheet",
+]
+license = { text = "MIT License" }
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Build Tools",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/shadMod/django-jsheet"
+"Bug Tracker" = "https://github.com/shadMod/django-jsheet/issues"
