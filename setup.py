@@ -9,7 +9,7 @@ setup(
     name="django-jsheet",
     packages=find_packages("django-jsheet"),
     package_dir={'': 'django-jsheet'},
-    version="0.1.0",
+    version="0.1.5",
     license="MIT License",
     description="Django JSheet",
     long_description=README,
@@ -17,7 +17,7 @@ setup(
     author="ShadMod",
     author_email="support@shadmod.it",
     url="https://github.com/shadMod/django-jsheet",
-    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.0.tar.gz",
+    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.5.tar.gz",
     keywords=[
         "Django JSheet",
         "Django-JSheet",
