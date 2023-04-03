@@ -1,23 +1,22 @@
-import pathlib
-
 from setuptools import setup, find_packages
 
-DIR_ = pathlib.Path(__file__).parent
-README = (DIR_ / "README.md").read_text()
+with open("README.md", "r", encoding="utf-8") as fn:
+    README = fn.read()
 
 setup(
     name="django-jsheet",
+    version="0.1.6",
     packages=find_packages("django-jsheet"),
     package_dir={'': 'django-jsheet'},
-    version="0.1.5",
-    license="MIT License",
     description="Django JSheet",
     long_description=README,
     long_description_content_type="text/markdown",
     author="ShadMod",
     author_email="support@shadmod.it",
+    license="MIT License",
+    python_requires=">=3.6",
     url="https://github.com/shadMod/django-jsheet",
-    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.5.tar.gz",
+    download_url="https://github.com/shadMod/django-jsheet/archive/refs/tags/0.1.6.tar.gz",
     keywords=[
         "Django JSheet",
         "Django-JSheet",
