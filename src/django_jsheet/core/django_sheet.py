@@ -1,32 +1,4 @@
-from decimal import Decimal
-from datetime import datetime
-
-from django.db.models.base import ModelBase
-from django.db.models.fields.files import FieldFile
 from django.urls import reverse_lazy
-from django.utils import timezone
-
-
-def cls_encode(value):
-    type_ = "text"
-    if value is None:
-        value = ""
-    if isinstance(value, int) or isinstance(value, Decimal) or isinstance(value, float):
-        type_ = "text"
-        value = str(value)
-    if isinstance(value, datetime):
-        type_ = "datetime-local"
-        # default to run jquery "%Y-%m-%dT%H:%M" // dont change!
-        value = value.strftime("%Y-%m-%dT%H:%M")
-    if type(type(value)) == ModelBase:
-        model_ = value.__class__
-        pk_ = str(value.pk)
-        type_ = "__select__/{0}/{1}".format(model_.__name__, pk_)
-        value = [(x.pk, x.__str__()) for x in model_.objects.all()]
-    if isinstance(value, FieldFile):
-        type_ = "text"
-        value = value.__str__()
-    return value, type_
 
 
 class DjangoSheet:
@@ -39,12 +11,6 @@ class DjangoSheet:
     :return: [ReturnDescription]
     :rtype: [ReturnType]
     """
-
-    # header = []
-    # jquery = {}
-    # colWidths = None
-    # alignWidths = None
-    # empty_row = 0
     force_clm = False
 
     def __init__(
@@ -60,11 +26,9 @@ class DjangoSheet:
         self.jquery = jquery
         self.colWidths = colWidths
         self.alignWidths = alignWidths
-        self.force_clm = force_clm
         self.empty_row = empty_row
-
+        self.force_clm = force_clm
         self.set_header = []
-        self.set_header2 = self.set_header
 
     @property
     def len_row(self):
@@ -99,10 +63,55 @@ class DjangoSheet:
         return colWidths
 
     @property
-    def set_header2(self):
+    def set_cell(self):
+        """
+        :return:    {
+                        "title": "txt",
+                        "initial": "txt",
+                        "query": "array",  # only with choices and modelChoices
+                        "width": 160,
+                        "align": "center",  # left, center, right
+                        "input": "text",  # text, number, float, choices, modelChoices
+                    }
+        :rtype:     dict
+        """
         data = []
-        for label, field in self.jquery[1].items():
-            data.append((label, field.__class__.__name__))
+
+        for i, label in enumerate(self.jquery[1].keys()):
+            field = self.jquery[1][label]
+            field_class = field.__class__.__name__
+
+            # init cell dict
+            cell = {
+                "title": label,
+                "initial": "",
+                "width": self.set_col_width[i],
+                "align": self.alignWidths,
+            }
+
+            # set all types
+            if field_class == 'CharField':
+                cell["input"] = "text"
+            if field_class == 'FloatField':
+                cell["input"] = "text"
+            if field_class == 'DateTimeField' or field_class == 'DateField':
+                cell["input"] = "datetime-local"
+            if field_class == 'FileField':
+                cell["input"] = "file"
+            if field_class == 'TypedChoiceField':
+                cell["input"] = "__choices__"
+                cell["query"] = getattr(self.jquery[0][0].__class__, label).field.choices
+            if field_class == 'ModelChoiceField':
+                cell["input"] = "__select__"
+                # set default empty select
+                cell["query"] = [("0", "None")]
+                if len(self.jquery[0]) >= 1:
+                    model_ = getattr(self.jquery[0][0], label).__class__
+                    if model_.__name__ != "NoneType":
+                        cell["title"] = model_.__name__
+                        cell["query"] = [(x.pk, x.__str__()) for x in model_.objects.all()]
+
+            data.append(cell)
         return data
 
     @property
@@ -124,7 +133,7 @@ class DjangoSheet:
         thead = []
         for i, value in enumerate(self.header):
             header_ = {
-                "title": value,
+                "title": value.capitalize(),
                 "value": value,
                 "width": self.set_col_width[i],
                 "align": self.alignWidths,
@@ -138,72 +147,27 @@ class DjangoSheet:
             query = self.jquery[0]
             order_by = list(self.jquery[1].keys())
         else:
-            query = []
-            order_by = []
+            raise
 
         init_data = {}
         for i, g in enumerate(query):
             data = []
             # TODO: if form has '__all__' in field, what do you do?
             if isinstance(order_by, list):
-                for x in order_by:
-                    if getattr(g.__class__, x).field.choices:
-                        type_ = "__choices__/{}".format(getattr(g, x))
-                        value = getattr(g.__class__, x).field.choices
-                    else:
-                        value, type_ = cls_encode(getattr(g, x))
-
-                    if i == 0:
-                        if '__select__' in type_:
-                            self.set_header.append((type_, value))
-                        elif '__choices__' in type_:
-                            self.set_header.append((type_, value))
+                for j, x in enumerate(order_by):
+                    value_dict = self.set_cell[j]
+                    value = getattr(g, x)
+                    if value:
+                        if value_dict["input"] == "__select__":
+                            value_dict["initial"] = value.pk
                         else:
-                            self.set_header.append(type_)
+                            value_dict["initial"] = value
 
-                    title = None
-                    selected = None
-                    if '__select__' in type_:
-                        type_, title, selected = type_.split("/")
-                    if '__choices__' in type_:
-                        type_, selected = type_.split("/")
-
-                    value_dict = {
-                        "title": title,
-                        "value": value,
-                        "selected": selected,
-                        "width": self.colWidths,
-                        "align": self.alignWidths,
-                        "input": type_,
-                    }
                     data.append(value_dict)
             init_data[g.pk] = data
 
         for g in range(self.empty_row):
-            data = []
-            for type_ in self.set_header:
-                title = None
-                if isinstance(type_, tuple):
-                    type_, value = type_
-                    if "__choices__" in type_:
-                        type_, title = type_.split("/")
-                    else:
-                        type_, title, _ = type_.split("/")
-                else:
-                    if type_ == "datetime-local":
-                        value = timezone.now().strftime("%Y-%m-%dT%H:%M")
-                    else:
-                        value = ""
-
-                value_dict = {
-                    "title": title,
-                    "value": value,
-                    "width": self.colWidths,
-                    "align": self.alignWidths,
-                    "input": type_,
-                }
-                data.append(value_dict)
-            init_data[f"empty_{g}"] = data
+            init_data[f"empty_{g}"] = self.set_cell
 
         return init_data
 
