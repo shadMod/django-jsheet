@@ -82,22 +82,26 @@ def display_jsheet(data: dict = None):
                     width=td_.get("width", ""), align=td_.get("align", "")
                 )
                 input_type = td_.get("input", "")
-                value = td_.get("value", "")
+                initial = td_.get("initial", "")
+                # select ModelChoiceField
                 if input_type == '__select__':
-                    selected = td_.get("selected", "")
+                    initial = td_.get("initial", "")
+                    query = td_.get("query", "")
                     tbody += "<select id='{title}{i}'>".format(i=i, title=td_.get("title", ""))
-                    for val_, label in value:
-                        if str(selected) == str(val_):
+                    for val_, label in query:
+                        if str(initial) == str(val_):
                             target = "selected"
                         else:
                             target = ""
                         tbody += "<option value='{0}' {2}>{1}</option>".format(val_, label, target)
                     tbody += "</select></td>"
+                # select TypedChoiceField
                 elif input_type == "__choices__":
-                    selected = td_.get("selected", "")
+
+                    query = td_.get("query", "")
                     tbody += "<select id='Choices{i}'>".format(i=i)
-                    for val_, label in value:
-                        if str(selected) == str(val_):
+                    for val_, label in query:
+                        if str(initial) == str(val_):
                             target = "selected"
                         else:
                             target = ""
@@ -106,7 +110,7 @@ def display_jsheet(data: dict = None):
                 else:
                     tbody += """
                         <input type="{input}" value="{value}"></td>
-                    """.format(i=i, input=input_type, value=value)
+                    """.format(i=i, input=input_type, value=initial)
             else:
                 raise
         tbody += "</tr>"
