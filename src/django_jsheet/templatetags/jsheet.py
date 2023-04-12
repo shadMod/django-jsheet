@@ -134,34 +134,3 @@ def display_jsheet(data: dict = None):
         style=CSS_STYLE, thead=thead, tbody=tbody, js_script=js_script, jsfooter=jsfooter,
     )
     return mark_safe(table)
-
-
-def js_script_row(n_row, start: int = 0):
-    js_script = ""
-    for i in range(start, n_row):
-        # init scripts
-        js_script += """
-            <script type="text/javascript">
-                var clm_len = document.getElementById('id_jsheet').rows[0].cells.length;
-        """
-        # get number row and init row_v and append value clean
-        js_script += """
-                row_%s.addEventListener("input", function (e) {
-                    var row_v = [];
-                    for (var i = 0; i < 6; i++) {
-                        row_v.push(this.getElementsByTagName('input')[i].value)
-                    } 
-        """ % i
-        # insert model value
-        js_script += """ 
-                    row_v.splice(1, 0, document.getElementById('User{0}').value.toString())
-                    row_v.splice(5, 0, document.getElementById('InvoiceReceiptTypology{0}').value)
-                    row_v.splice(6, 0, document.getElementById('PaymentMethod{0}').value)
-        """.format(i)
-        # run update_rows to send request POST
-        js_script += """
-                    update_rows(row_v, %s);
-                });
-            </script>
-        """ % i
-    return js_script

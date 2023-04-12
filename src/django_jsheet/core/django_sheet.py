@@ -186,7 +186,7 @@ class DjangoSheet:
             js_script += """
                     row_%s.addEventListener("input", function (e) {
                         var row_v = [];
-                        for (var i = 0; i < 6; i++) {
+                        for (var i = 0; i < 5; i++) {
                             row_v.push(this.getElementsByTagName('input')[i].value)
                         } 
             """ % i
