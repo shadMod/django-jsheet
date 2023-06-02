@@ -186,6 +186,8 @@ class DjangoSheetFormView(FormView):
                 if field == "FileField":
                     list_vl.append(str(vl))
                 if field == "TypedChoiceField":
+                    choices = getattr(self.model, key_).field.choices
+                    vl = dict(choices)[vl]
                     list_vl.append(str(vl))
                 if field == "ModelChoiceField":
                     list_vl.append(str(vl))
