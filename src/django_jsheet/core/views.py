@@ -77,19 +77,19 @@ class DjangoSheetFormView(FormView):
             field_name = field.__class__.__name__
             if field_name == "CharField":
                 type_header = (
-                        """
+                    """
                         {
                             type: 'text',
                             title: '%s',
                             width: 400
                         },
                     """
-                        % self.header[i]
+                    % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FloatField":
                 type_header = (
-                        """
+                    """
                         {
                             type: 'numeric',
                             title: '%s',
@@ -98,31 +98,31 @@ class DjangoSheetFormView(FormView):
                             decimal: ','
                         },
                     """
-                        % self.header[i]
+                    % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "DateTimeField" or field_name == "DateField":
                 type_header = (
-                        """
+                    """
                         {
                             type: 'calendar',
                             title: '%s',
                             width: 120
                         },
                     """
-                        % self.header[i]
+                    % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FileField":
                 type_header = (
-                        """
+                    """
                         {
                             type: 'text',
                             title: '%s',
                             width: 400
                         },
                     """
-                        % self.header[i]
+                    % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "TypedChoiceField":
