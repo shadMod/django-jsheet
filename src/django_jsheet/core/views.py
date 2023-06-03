@@ -27,24 +27,30 @@ class DjangoSheetFormView(FormView):
         if not self.header:
             self.header = list(self.form_class.base_fields.keys())
 
+        self.jspath = self.mk_jspath()
+        self.jsdata = self.jspath + "/data.js"
+
         if settings.DEBUG:
             self.SVIL = True
 
         if self.HISTORY:
-            # check if exist populate file log
-            # TODO: code
-            # make and get populate file log (first populate)
+            # make and populate file log (first populate)
             self.path_filelog, self.filelog = self.mk_file_log()
             self.populate_log()
-            self.jspath = self.mk_jspath()
+
+        if self.SYNC_DB:
             # prepopulate js with data model
-            # self.make_data_js()
-            # read populate file log
-            self.jsheadersheet()
+            self.make_data_js()
+
+        # read populate file log
+        self.jsheadersheet()
+
+        if self.HISTORY:
             # populate file log
             # TODO: code
             # clean all populate file log (without latest)
             # TODO: code
+            pass
 
     def dispatch(self, *args, **kwargs):
         # added fetch post file
@@ -222,8 +228,7 @@ class DjangoSheetFormView(FormView):
         else:
             datajs += str(data)
 
-        jsfile = self.jspath + "/data.js"
-        with open(jsfile, "w") as fl:
+        with open(self.jsdata, "w") as fl:
             fl.write(datajs)
 
     def prepopulate_datajs(self):
