@@ -1,0 +1,3 @@
+[submodule "django_jsheet/libs/django_jsheet_assets"]
+	path = django_jsheet/libs/django_jsheet_assets
+	url = git@github.com:shadMod/django_jsheet_assets.git
