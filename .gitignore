@@ -134,5 +134,7 @@ dmypy.json
 
 # test project
 project
+data
 templates
 robe
+manage.py
