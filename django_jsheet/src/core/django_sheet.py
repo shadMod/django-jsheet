@@ -20,23 +20,32 @@ class DjangoSheet:
             colWidths,
             alignWidths,
             empty_row,
+            success_url,
             force_clm=force_clm,
     ):
         self.header = header
-        self.jquery = jquery
+
+        if len(jquery) == 1:
+            self.form_fields = jquery
+        elif len(jquery) == 2:
+            self.queryset, self.form_fields = jquery
+        else:
+            raise
+
         self.colWidths = colWidths
         self.alignWidths = alignWidths
         self.empty_row = empty_row
+        self.success_url = success_url
         self.force_clm = force_clm
         self.set_header = []
 
     @property
     def len_row(self):
-        return len(self.jquery[0])
+        return len(self.queryset) if self.queryset is not None else 0
 
     @property
     def len_row_sum(self):
-        return len(self.jquery[0]) + int(self.empty_row)
+        return self.len_row + int(self.empty_row)
 
     @property
     def range_len_row(self):
@@ -77,8 +86,8 @@ class DjangoSheet:
         """
         data = []
 
-        for i, label in enumerate(self.jquery[1].keys()):
-            field = self.jquery[1][label]
+        for i, label in enumerate(self.form_fields.keys()):
+            field = self.form_fields[label]
             field_class = field.__class__.__name__
 
             # init cell dict
@@ -100,13 +109,13 @@ class DjangoSheet:
                 cell["input"] = "file"
             if field_class == 'TypedChoiceField':
                 cell["input"] = "__choices__"
-                cell["query"] = getattr(self.jquery[0][0].__class__, label).field.choices
+                cell["query"] = getattr(self.queryset[0].__class__, label).field.choices
             if field_class == 'ModelChoiceField':
                 cell["input"] = "__select__"
                 # set default empty select
                 cell["query"] = [("0", "None")]
-                if len(self.jquery[0]) >= 1:
-                    model_ = getattr(self.jquery[0][0], label).__class__
+                if len(self.queryset) >= 1:
+                    model_ = getattr(self.queryset[0], label).__class__
                     if model_.__name__ != "NoneType":
                         cell["title"] = model_.__name__
                         cell["query"] = [(x.pk, x.__str__()) for x in model_.objects.all()]
@@ -143,28 +152,25 @@ class DjangoSheet:
 
     @property
     def init_data(self):
-        if isinstance(self.jquery, tuple):
-            query = self.jquery[0]
-            order_by = list(self.jquery[1].keys())
-        else:
-            raise
+        order_by = list(self.form_fields.keys())
 
         init_data = {}
-        for i, g in enumerate(query):
-            data = []
-            # TODO: if form has '__all__' in field, what do you do?
-            if isinstance(order_by, list):
-                for j, x in enumerate(order_by):
-                    value_dict = self.set_cell[j]
-                    value = getattr(g, x)
-                    if value:
-                        if value_dict["input"] == "__select__":
-                            value_dict["initial"] = value.pk
-                        else:
-                            value_dict["initial"] = value
+        if self.queryset:
+            for i, g in enumerate(self.queryset):
+                data = []
+                # TODO: if form has '__all__' in field, what do you do?
+                if isinstance(order_by, list):
+                    for j, x in enumerate(order_by):
+                        value_dict = self.set_cell[j]
+                        value = getattr(g, x)
+                        if value:
+                            if value_dict["input"] == "__select__":
+                                value_dict["initial"] = value.pk
+                            else:
+                                value_dict["initial"] = value
 
-                    data.append(value_dict)
-            init_data[g.pk] = data
+                        data.append(value_dict)
+                init_data[g.pk] = data
 
         for g in range(self.empty_row):
             init_data[f"empty_{g}"] = self.set_cell
@@ -235,7 +241,7 @@ class DjangoSheet:
             })
         }
         </script>
-        """ % reverse_lazy("office-financial-invoice-receipt-sheet")
+        """ % reverse_lazy(self.success_url)
 
     @property
     def jsformulas(self):
