@@ -1,7 +1,7 @@
 import os
 import setuptools
 
-__version__ = "0.2.5"
+__version__ = "0.3.0"
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -34,7 +34,6 @@ setuptools.setup(
     },
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
@@ -42,6 +41,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     packages=[
         "django_jsheet", "django_jsheet.src.core", "django_jsheet.src.templatetags",
