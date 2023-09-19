@@ -38,9 +38,8 @@ class DjangoSheetFormView(FormView):
             self.path_filelog, self.filelog = self.mk_file_log()
             self.populate_log()
 
-        if self.SYNC_DB:
-            # prepopulate js with data model
-            self.make_data_js()
+        # make data.js with data model and empty rows
+        self.make_data_js(sync_db=self.SYNC_DB)
 
         # read populate file log
         self.jsheadersheet()
@@ -82,7 +81,7 @@ class DjangoSheetFormView(FormView):
             data.append(row)
 
         try:
-            self.make_data_js(data)
+            self.make_data_js(data, self.SYNC_DB)
         except Exception as ex:
             logger.error(traceback.format_exc())
             return False, ex
@@ -123,52 +122,52 @@ class DjangoSheetFormView(FormView):
             field_name = field.__class__.__name__
             if field_name == "CharField":
                 type_header = (
-                    """
-                        {
-                            type: 'text',
-                            title: '%s',
-                            width: 400
-                        },
-                    """
-                    % self.header[i]
+                        """
+                                {
+                                    type: 'text',
+                                    title: '%s',
+                                    width: 400
+                                },
+                            """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FloatField":
                 type_header = (
-                    """
-                        {
-                            type: 'numeric',
-                            title: '%s',
-                            mask: '€ #.##,00',
-                            width: 120,
-                            decimal: ','
-                        },
-                    """
-                    % self.header[i]
+                        """
+                                {
+                                    type: 'numeric',
+                                    title: '%s',
+                                    mask: '€ #.##,00',
+                                    width: 120,
+                                    decimal: ','
+                                },
+                            """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "DateTimeField" or field_name == "DateField":
                 type_header = (
-                    """
-                        {
-                            type: 'calendar',
-                            title: '%s',
-                            width: 120
-                        },
-                    """
-                    % self.header[i]
+                        """
+                                {
+                                    type: 'calendar',
+                                    title: '%s',
+                                    width: 120
+                                },
+                            """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FileField":
                 type_header = (
-                    """
-                        {
-                            type: 'text',
-                            title: '%s',
-                            width: 400
-                        },
-                    """
-                    % self.header[i]
+                        """
+                                {
+                                    type: 'text',
+                                    title: '%s',
+                                    width: 400
+                                },
+                            """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "TypedChoiceField":
@@ -206,7 +205,7 @@ class DjangoSheetFormView(FormView):
         with open(jsfile, "w") as fl:
             fl.write(datajs)
 
-    def make_data_js(self, data: str = None):
+    def make_data_js(self, data: str = None, sync_db: bool = False):
         """
         var data = [
             ['50', 'Robe', 'casa', 'carta', '2019-02-12', 'non pagato'], real data value
@@ -218,8 +217,9 @@ class DjangoSheetFormView(FormView):
         if not data:
             # open data
             datajs += "["
-            # prepopulate datajs if exist model and data row in model
-            datajs += self.prepopulate_datajs()
+            if sync_db:
+                # prepopulate/sync datajs if exist model and data row in model
+                datajs += self.prepopulate_datajs()
             # write empty row
             for i in range(self.empty_row):
                 datajs += str(["" for x in range(len(self.header))]) + ","
@@ -325,7 +325,10 @@ class DjangoSheetFormView(FormView):
                 }
             );
         }
-        """ % (self.TIME_UPDATE, post_url)
+        """ % (
+            self.TIME_UPDATE,
+            post_url,
+        )
 
         # make and put scripts in fetch_post.js in jspath dir
         jsfile = self.jspath + "/fetch_post.js"
