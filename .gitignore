@@ -131,3 +131,8 @@ dmypy.json
 # pycharm project
 *.idea
 .idea
+
+# test project
+project
+templates
+robe
