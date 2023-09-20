@@ -101,7 +101,7 @@ class DjangoSheet:
             # set all types
             if field_class == 'CharField':
                 cell["input"] = "text"
-            if field_class == 'FloatField':
+            if field_class in ["IntegerField", "FloatField", "DecimalField"]:
                 cell["input"] = "text"
             if field_class == 'DateTimeField' or field_class == 'DateField':
                 cell["input"] = "datetime-local"
@@ -109,7 +109,10 @@ class DjangoSheet:
                 cell["input"] = "file"
             if field_class == 'TypedChoiceField':
                 cell["input"] = "__choices__"
-                cell["query"] = getattr(self.queryset[0].__class__, label).field.choices
+                if self.queryset:
+                    cell["query"] = getattr(self.queryset[0].__class__, label).field.choices
+                else:
+                    pass
             if field_class == 'ModelChoiceField':
                 cell["input"] = "__select__"
                 # set default empty select
