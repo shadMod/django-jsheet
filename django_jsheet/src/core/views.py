@@ -34,9 +34,8 @@ class DjangoSheetFormView(FormView):
             self.SVIL = True
 
         if self.HISTORY:
-            # make and populate file log (first populate)
+            # init file log paths
             self.path_filelog, self.filelog = self.mk_file_log()
-            self.populate_log()
 
         # make data.js with data model and empty rows
         self.make_data_js(sync_db=self.SYNC_DB)
@@ -86,6 +85,8 @@ class DjangoSheetFormView(FormView):
             logger.error(traceback.format_exc())
             return False, ex
 
+        self.populate_log()
+
         return True, "ok"
 
     def mk_jspath(self):
@@ -104,10 +105,7 @@ class DjangoSheetFormView(FormView):
         else:
             now_ = datetime.now().strftime("%d%m%Y_%H%M%S")
         # init filelog
-        filelog = path_logs + "datalog_" + now_ + ".json"
-
-        f = open(filelog, "w")
-        f.close()
+        filelog = path_logs + "datalog_" + now_ + ".log"
         return path_logs, filelog
 
     def jsheadersheet(self):
@@ -220,13 +218,17 @@ class DjangoSheetFormView(FormView):
             if sync_db:
                 # prepopulate/sync datajs if exist model and data row in model
                 datajs += self.prepopulate_datajs()
+            elif os.path.exists(self.filelog):
+                with open(self.filelog) as fn:
+                    last_log = fn.readlines()[-1]
+                datajs += last_log.split("_GMT__")[1]
             # write empty row
-            for i in range(self.empty_row):
-                datajs += str(["" for x in range(len(self.header))]) + ","
-            # close datajs
+            if not os.path.exists(self.filelog):
+                empty_row = str(['' for _ in range(len(self.header))])
+                datajs += ",".join([empty_row for _ in range(self.empty_row)])
             datajs += "];"
         else:
-            datajs += str(data)
+            datajs += str(data) + ";"
 
         with open(self.jsdata, "w") as fl:
             fl.write(datajs)
@@ -259,12 +261,16 @@ class DjangoSheetFormView(FormView):
         return datajs
 
     def populate_log(self):
-        datalog = {}
-        for key in self.form_class.base_fields.keys():
-            datalog[key] = ""
+        with open(self.jsdata) as fn:
+            datalist = fn.read().replace("var data = ", "")
 
-        with open(self.filelog, "w") as fl:
-            fl.write(json.dumps(datalog))
+        datalog = datalist.replace("[['", "['").replace("']];", "']")
+
+        mode = "a" if os.path.exists(self.filelog) else "w"
+        space_txt = "\n" if mode == "a" else ""
+        with open(self.filelog, mode=mode) as fl:
+            log_rows = datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
+            fl.write(log_rows)
 
     def make_fetch_js(self):
         # get current url and relative path url
