@@ -108,6 +108,75 @@ class DjangoSheetFormView(FormView):
         filelog = path_logs + "datalog_" + now_ + ".log"
         return path_logs, filelog
 
+    def make_data_js(self, data: list = None, sync_db: bool = False):
+        """
+        var data = [
+            ['50', 'Robe', 'casa', 'carta', '2019-02-12', 'non pagato'], real data value
+            ['', '', '', '', '', ''], empty row (set in init)
+        ];
+        """
+        # init datajs
+        datajs = "var data = "
+        if not data:
+            # open data
+            datajs += "["
+            if sync_db:
+                # prepopulate/sync datajs if exist model and data row in model
+                datajs += self.prepopulate_datajs()
+            elif os.path.exists(self.filelog):
+                with open(self.filelog) as fn:
+                    last_log = fn.readlines()[-1]
+                datajs += last_log.split("_GMT__")[1]
+            # write empty row
+            if not os.path.exists(self.filelog):
+                empty_row = str(['' for _ in range(len(self.header))])
+                datajs += ",".join([empty_row for _ in range(self.empty_row)])
+            datajs += "];"
+        else:
+            datajs += str(data) + ";"
+
+        with open(self.jsdata, "w") as fl:
+            fl.write(datajs)
+
+    def prepopulate_datajs(self):
+        datajs = ""
+        for value in self.model.objects.all():
+            list_vl = []
+            for key_, field in self.form_class.base_fields.items():
+                # get value
+                vl = getattr(value, key_)
+
+                # set field name
+                field = field.__class__.__name__
+                if field == "CharField":
+                    list_vl.append(str(vl))
+                if field == "FloatField":
+                    list_vl.append(str(vl))
+                if field == "DateTimeField" or field == "DateField":
+                    list_vl.append(str(vl.strftime("%Y-%m-%d")))
+                if field == "FileField":
+                    list_vl.append(str(vl))
+                if field == "TypedChoiceField":
+                    choices = getattr(self.model, key_).field.choices
+                    vl = dict(choices)[vl]
+                    list_vl.append(str(vl))
+                if field == "ModelChoiceField":
+                    list_vl.append(str(vl))
+            datajs += str(list_vl) + ","
+        return datajs
+
+    def populate_log(self):
+        with open(self.jsdata) as fn:
+            datalist = fn.read().replace("var data = ", "")
+
+        datalog = datalist.replace("[['", "['").replace("']];", "']")
+
+        mode = "a" if os.path.exists(self.filelog) else "w"
+        space_txt = "\n" if mode == "a" else ""
+        with open(self.filelog, mode=mode) as fl:
+            log_rows = datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
+            fl.write(log_rows)
+
     def jsheadersheet(self):
         datajs = """
 			jspreadsheet(document.getElementById('spreadsheet'), {
@@ -124,7 +193,7 @@ class DjangoSheetFormView(FormView):
                                 {
                                     type: 'text',
                                     title: '%s',
-                                    width: 400
+                                    width: 400 
                                 },
                             """
                         % self.header[i]
@@ -202,75 +271,6 @@ class DjangoSheetFormView(FormView):
         jsfile = self.jspath + "/header.js"
         with open(jsfile, "w") as fl:
             fl.write(datajs)
-
-    def make_data_js(self, data: str = None, sync_db: bool = False):
-        """
-        var data = [
-            ['50', 'Robe', 'casa', 'carta', '2019-02-12', 'non pagato'], real data value
-            ['', '', '', '', '', ''], empty row (set in init)
-        ];
-        """
-        # init datajs
-        datajs = "var data = "
-        if not data:
-            # open data
-            datajs += "["
-            if sync_db:
-                # prepopulate/sync datajs if exist model and data row in model
-                datajs += self.prepopulate_datajs()
-            elif os.path.exists(self.filelog):
-                with open(self.filelog) as fn:
-                    last_log = fn.readlines()[-1]
-                datajs += last_log.split("_GMT__")[1]
-            # write empty row
-            if not os.path.exists(self.filelog):
-                empty_row = str(['' for _ in range(len(self.header))])
-                datajs += ",".join([empty_row for _ in range(self.empty_row)])
-            datajs += "];"
-        else:
-            datajs += str(data) + ";"
-
-        with open(self.jsdata, "w") as fl:
-            fl.write(datajs)
-
-    def prepopulate_datajs(self):
-        datajs = ""
-        for value in self.model.objects.all():
-            list_vl = []
-            for key_, field in self.form_class.base_fields.items():
-                # get value
-                vl = getattr(value, key_)
-
-                # set field name
-                field = field.__class__.__name__
-                if field == "CharField":
-                    list_vl.append(str(vl))
-                if field == "FloatField":
-                    list_vl.append(str(vl))
-                if field == "DateTimeField" or field == "DateField":
-                    list_vl.append(str(vl.strftime("%Y-%m-%d")))
-                if field == "FileField":
-                    list_vl.append(str(vl))
-                if field == "TypedChoiceField":
-                    choices = getattr(self.model, key_).field.choices
-                    vl = dict(choices)[vl]
-                    list_vl.append(str(vl))
-                if field == "ModelChoiceField":
-                    list_vl.append(str(vl))
-            datajs += str(list_vl) + ","
-        return datajs
-
-    def populate_log(self):
-        with open(self.jsdata) as fn:
-            datalist = fn.read().replace("var data = ", "")
-
-        datalog = datalist.replace("[['", "['").replace("']];", "']")
-
-        mode = "a" if os.path.exists(self.filelog) else "w"
-        space_txt = "\n" if mode == "a" else ""
-        with open(self.filelog, mode=mode) as fl:
-            log_rows = datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
-            fl.write(log_rows)
 
     def make_fetch_js(self):
         # get current url and relative path url
