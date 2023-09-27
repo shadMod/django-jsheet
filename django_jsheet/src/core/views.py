@@ -14,17 +14,18 @@ logger = getLogger(__name__)
 
 
 class DjangoSheetFormView(FormView):
+    model: str = None
+    header: list = None
+    empty_row: int = 10
+
     HISTORY: bool = True
     LOGROOT: str = None
     SVIL: bool = False
     TIME_UPDATE: int = 10000  # 10000 => 10 sec
     SYNC_DB: bool = False
-    empty_row: int = 10
-    header: list = None
-    model = None
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(DjangoSheetFormView, self).__init__(*args, **kwargs)
         if not self.header:
             self.header = list(self.form_class.base_fields.keys())
         else:
@@ -187,7 +188,7 @@ class DjangoSheetFormView(FormView):
         space_txt = "\n" if mode == "a" else ""
         with open(self.filelog, mode=mode) as fl:
             log_rows = (
-                datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
+                    datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
             )
             fl.write(log_rows)
 
@@ -203,52 +204,52 @@ class DjangoSheetFormView(FormView):
             field_name = field.__class__.__name__
             if field_name == "CharField":
                 type_header = (
-                    """
-                                    {
-                                        type: 'text',
-                                        title: '%s',
-                                        width: 400 
-                                    },
-                                """
-                    % self.header[i]
+                        """
+                                        {
+                                            type: 'text',
+                                            title: '%s',
+                                            width: 400 
+                                        },
+                                    """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FloatField":
                 type_header = (
-                    """
-                             {
-                                 type: 'numeric',
-                                 title: '%s',
-                                 mask: '€ #.##,00',
-                                 width: 120,
-                                 decimal: ','
-                             },
-                         """
-                    % self.header[i]
+                        """
+                                 {
+                                     type: 'numeric',
+                                     title: '%s',
+                                     mask: '€ #.##,00',
+                                     width: 120,
+                                     decimal: ','
+                                 },
+                             """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "DateTimeField" or field_name == "DateField":
                 type_header = (
-                    """
-                                    {
-                                        type: 'calendar',
-                                        title: '%s',
-                                        width: 120
-                                    },
-                                """
-                    % self.header[i]
+                        """
+                                        {
+                                            type: 'calendar',
+                                            title: '%s',
+                                            width: 120
+                                        },
+                                    """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "FileField":
                 type_header = (
-                    """
-                                    {
-                                        type: 'text',
-                                        title: '%s',
-                                        width: 400
-                                    },
-                                """
-                    % self.header[i]
+                        """
+                                        {
+                                            type: 'text',
+                                            title: '%s',
+                                            width: 400
+                                        },
+                                    """
+                        % self.header[i]
                 )
                 type_header = "".join(type_header.split())
             if field_name == "TypedChoiceField":
