@@ -20,12 +20,14 @@ class DjangoSheetFormView(FormView):
     TIME_UPDATE: int = 10000  # 10000 => 10 sec
     SYNC_DB: bool = False
     empty_row: int = 10
-    header = None
+    header: list = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.header:
             self.header = list(self.form_class.base_fields.keys())
+        else:
+            self.header_validator()
 
         self.jspath = self.mk_jspath()
         self.jsdata = self.jspath + "/data.js"
@@ -89,13 +91,22 @@ class DjangoSheetFormView(FormView):
 
         return True, "ok"
 
-    def mk_jspath(self):
+    def header_validator(self) -> None:
+        nr_header = len(self.header)
+        nr_base_fields = len(self.form_class.base_fields.keys())
+        if nr_header != nr_base_fields:
+            if nr_header > nr_base_fields:
+                self.header = self.header[nr_base_fields]
+            if nr_header < nr_base_fields:
+                self.header.extend(["" for _ in range(nr_base_fields - nr_header)])
+
+    def mk_jspath(self) -> str:
         jspath = str(self.LOGROOT) + "/jsheet/js/"
         if not os.path.exists(jspath):
             os.makedirs(jspath)
         return jspath
 
-    def mk_file_log(self):
+    def mk_file_log(self) -> (str, str):
         path_logs = str(self.LOGROOT) + "/jsheet/"
         if not os.path.exists(path_logs):
             os.makedirs(path_logs)
@@ -108,7 +119,7 @@ class DjangoSheetFormView(FormView):
         filelog = path_logs + "datalog_" + now_ + ".log"
         return path_logs, filelog
 
-    def make_data_js(self, data: list = None, sync_db: bool = False):
+    def make_data_js(self, data: list = None, sync_db: bool = False) -> None:
         """
         var data = [
             ['50', 'Robe', 'casa', 'carta', '2019-02-12', 'non pagato'], real data value
