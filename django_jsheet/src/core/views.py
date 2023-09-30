@@ -16,6 +16,21 @@ logger = getLogger(__name__)
 
 
 class DjangoSheetFormView(FormView):
+    """
+    :model:         add model (not required)
+    :header:        set header column (not required)
+    :empty_row:     set number of empty row post data
+                    (N.B. they are initialized when the first data.js is created)
+
+    :HISTORY:       if True make and populate filelog with edit history
+    :LOGROOT:       populate with the root path where we are going to load
+                    the various static script files
+    :SVIL:          if True active debug mode; if settings.DEBUG is True SVIL
+                    will be regardless true
+    :TIME_UPDATE:   determines how often you want to save resources
+                    (eg 10000 = 10 sec)
+    :SYNC_DB:       if True all changes will also go to save in the DB
+    """
     model: str = None
     header: list = None
     empty_row: int = 10
@@ -23,7 +38,7 @@ class DjangoSheetFormView(FormView):
     HISTORY: bool = False
     LOGROOT: str = None
     SVIL: bool = False
-    TIME_UPDATE: int = 10000  # 10000 => 10 sec
+    TIME_UPDATE: int = 10000
     SYNC_DB: bool = False
 
     def __init__(self, *args, **kwargs):
@@ -36,7 +51,7 @@ class DjangoSheetFormView(FormView):
         self.jspath = self.mk_jspath()
         self.jsdata = self.jspath + "/data.js"
 
-        if settings.DEBUG:
+        if settings.DEBUG is True:
             self.SVIL = True
 
         # init file log paths
