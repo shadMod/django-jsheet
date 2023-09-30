@@ -227,14 +227,16 @@ class DjangoSheetFormView(FormView):
                 type_header = column_header("DateTimeField", self.header[i])
             if field_name == "FileField":
                 type_header = column_header("FileField", self.header[i])
-            if field_name == "TypedChoiceField":
+            if field_name in ["ChoiceField", "TypedChoiceField"]:
                 source = [x[1] for x in field._choices]
                 type_header = column_header(
                     "TypedChoiceField", self.header[i], source
                 ).replace("'['", "['").replace("']'", "']")
             if field_name == "ModelChoiceField":
                 source = [x.__str__() for x in field._queryset]
-                type_header = column_header("ModelChoiceField", self.header[i], source)
+                type_header = column_header(
+                    "ModelChoiceField", self.header[i], source
+                ).replace("'['", "['").replace("']'", "']")
             header.append(type_header)
 
         datajs += str(header).replace('"', "").replace(",,", ",") + "})"
