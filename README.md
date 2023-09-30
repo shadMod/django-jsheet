@@ -1,12 +1,18 @@
 # Django JSheet
 
-Django JSheet is a little tool to render a simple excel sheet in webpage
+Django JSheet is a small tool for rendering a simple spreadsheet into a web page.
 
-A sheet is generated with all the data and its history.
+By taking advantage form_class's fields the cells are set with the appropriate properties^.
 
-No model is required, but you can eventually add it to allows synchronization of data with the db
-(to combine with submodule django_jsheet_assets)
+There is the ability to use classic excel formulas > see docs for more details
 
-There are many around, but mine is cooler because it's made by me .-.
+Saving the data is done through an asynchronous method and there is the possibility of a
+chronological saving of all changes.
 
-Good luck! \o/``
+No model is required, but one can possibly be added to allow synchronization of the data with the db.
+
+^(eg IntegerField => int, TypedChoiceField => select etc)
+
+**installation of the django_jsheet_assets package is required)**.
+
+Good luck! \o/
