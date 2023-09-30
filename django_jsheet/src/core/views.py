@@ -20,7 +20,7 @@ class DjangoSheetFormView(FormView):
     header: list = None
     empty_row: int = 10
 
-    HISTORY: bool = True
+    HISTORY: bool = False
     LOGROOT: str = None
     SVIL: bool = False
     TIME_UPDATE: int = 10000  # 10000 => 10 sec
@@ -39,9 +39,11 @@ class DjangoSheetFormView(FormView):
         if settings.DEBUG:
             self.SVIL = True
 
+        # init file log paths
         if self.HISTORY:
-            # init file log paths
             self.path_filelog, self.filelog = self.mk_file_log()
+        else:
+            self.path_filelog, self.filelog = None, None
 
         # make data.js with data model and empty rows
         self.make_data_js(sync_db=self.SYNC_DB)
@@ -133,13 +135,16 @@ class DjangoSheetFormView(FormView):
                 # prepopulate/sync datajs if exist model and data row in model
                 datajs += self.prepopulate_datajs()
                 datajs += self.get_emtpy_row()
-            elif os.path.exists(self.filelog):
+            elif self.filelog and os.path.exists(self.filelog):
                 with open(self.filelog) as fn:
                     last_log = fn.readlines()[-1]
                 datajs += last_log.split("_GMT__")[1]
                 # write empty row
                 if not os.path.exists(self.filelog):
                     datajs += self.get_emtpy_row()
+            elif os.path.exists(self.jsdata):
+                with open(self.jsdata) as fn:
+                    datajs += fn.read().replace("var data = [", "").replace("']];", "']")
             else:
                 datajs += self.get_emtpy_row()
             datajs += "];"
