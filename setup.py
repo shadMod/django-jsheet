@@ -2,7 +2,7 @@ import os
 import glob
 import setuptools
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -49,14 +49,16 @@ setuptools.setup(
         "django_jsheet.src.core",
         "django_jsheet.src.templatetags",
     ],
-    install_requires=(
-            get_install_requires()
-            + ["django_jsheet_assets @ git+https://github.com/shadMod/django_jsheet_assets.git"]
-    ),
+    install_requires=get_install_requires(),
     data_files=[
         (
-            "assets",
+            "libs/assets",
             [fn for fn in glob.iglob("django_jsheet/src/core/assets/**/*", recursive=True) if "." in fn],
+        ),
+        (
+            "libs/libs",
+            [fn for fn in glob.iglob("django_jsheet/libs/django_jsheet_assets/assets/**/*", recursive=True) if
+             "." in fn],
         ),
     ],
     python_requires=">=3.8",
