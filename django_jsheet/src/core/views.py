@@ -84,7 +84,8 @@ class DjangoSheetFormView(FormView):
             logger.error(traceback.format_exc())
             return False, ex
 
-        self.populate_log()
+        if self.HISTORY:
+            self.populate_log()
 
         return True, "ok"
 
