@@ -138,12 +138,17 @@ class DjangoSheetFormView(FormView):
             if sync_db:
                 # prepopulate/sync datajs if exist model and data row in model
                 datajs += self.prepopulate_datajs()
+                empty_row = str(["" for _ in range(len(self.header))])
+                datajs += ",".join([empty_row for _ in range(self.empty_row)])
             elif os.path.exists(self.filelog):
                 with open(self.filelog) as fn:
                     last_log = fn.readlines()[-1]
                 datajs += last_log.split("_GMT__")[1]
-            # write empty row
-            if not os.path.exists(self.filelog):
+                # write empty row
+                if not os.path.exists(self.filelog):
+                    empty_row = str(["" for _ in range(len(self.header))])
+                    datajs += ",".join([empty_row for _ in range(self.empty_row)])
+            else:
                 empty_row = str(["" for _ in range(len(self.header))])
                 datajs += ",".join([empty_row for _ in range(self.empty_row)])
             datajs += "];"
