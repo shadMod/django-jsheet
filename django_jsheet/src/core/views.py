@@ -49,13 +49,6 @@ class DjangoSheetFormView(FormView):
         # read populate file log
         self.jsheadersheet()
 
-        if self.HISTORY:
-            # populate file log
-            # TODO: code
-            # clean all populate file log (without latest)
-            # TODO: code
-            pass
-
     def dispatch(self, *args, **kwargs):
         # added fetch post file
         self.make_fetch_js()
