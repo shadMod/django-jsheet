@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from django.views.generic.edit import FormView
 from django.urls import reverse_lazy
 
+from .constats import column_header, get_fetch_js
+
 logger = getLogger(__name__)
 
 
@@ -155,22 +157,28 @@ class DjangoSheetFormView(FormView):
         datajs = ""
         for value in self.model.objects.all():
             list_vl = []
-            for key_, field in self.form_class.base_fields.items():
+            for key, field in self.form_class.base_fields.items():
                 # get value
-                vl = getattr(value, key_)
+                vl = getattr(value, key)
 
                 # set field name
                 field = field.__class__.__name__
                 if field == "CharField":
                     list_vl.append(str(vl))
+                if field == "IntegerField":
+                    list_vl.append(str(vl))
                 if field == "FloatField":
                     list_vl.append(str(vl))
-                if field == "DateTimeField" or field == "DateField":
+                if field == "DecimalField":
+                    list_vl.append(str(vl))
+                if field == "DateField":
+                    list_vl.append(str(vl.strftime("%Y-%m-%d")))
+                if field == "DateTimeField":
                     list_vl.append(str(vl.strftime("%Y-%m-%d")))
                 if field == "FileField":
                     list_vl.append(str(vl))
                 if field == "TypedChoiceField":
-                    choices = getattr(self.model, key_).field.choices
+                    choices = getattr(self.model, key).field.choices
                     vl = dict(choices)[vl]
                     list_vl.append(str(vl))
                 if field == "ModelChoiceField":
@@ -203,83 +211,25 @@ class DjangoSheetFormView(FormView):
             # set field name
             field_name = field.__class__.__name__
             if field_name == "CharField":
-                type_header = (
-                        """
-                                        {
-                                            type: 'text',
-                                            title: '%s',
-                                            width: 400 
-                                        },
-                                    """
-                        % self.header[i]
-                )
-                type_header = "".join(type_header.split())
+                type_header = column_header("CharField", self.header[i])
+            if field_name == "IntegerField":
+                type_header = column_header("IntegerField", self.header[i])
             if field_name == "FloatField":
-                type_header = (
-                        """
-                                 {
-                                     type: 'numeric',
-                                     title: '%s',
-                                     mask: '€ #.##,00',
-                                     width: 120,
-                                     decimal: ','
-                                 },
-                             """
-                        % self.header[i]
-                )
-                type_header = "".join(type_header.split())
-            if field_name == "DateTimeField" or field_name == "DateField":
-                type_header = (
-                        """
-                                        {
-                                            type: 'calendar',
-                                            title: '%s',
-                                            width: 120
-                                        },
-                                    """
-                        % self.header[i]
-                )
-                type_header = "".join(type_header.split())
+                type_header = column_header("FloatField", self.header[i])
+            if field_name == "DecimalField":
+                type_header = column_header("DecimalField", self.header[i])
+            if field_name == "DateField":
+                type_header = column_header("DateField", self.header[i])
+            if field_name == "DateTimeField":
+                type_header = column_header("DateTimeField", self.header[i])
             if field_name == "FileField":
-                type_header = (
-                        """
-                                        {
-                                            type: 'text',
-                                            title: '%s',
-                                            width: 400
-                                        },
-                                    """
-                        % self.header[i]
-                )
-                type_header = "".join(type_header.split())
+                type_header = column_header("FileField", self.header[i])
             if field_name == "TypedChoiceField":
                 source = [x[1] for x in field._choices]
-                type_header = """
-					{
-						type: 'dropdown',
-						title: '%s',
-						width: 150,
-						source: %s
-					}
-				""" % (
-                    self.header[i],
-                    source,
-                )
-                type_header = " ".join(type_header.split())
+                type_header = column_header("TypedChoiceField", self.header[i], source)
             if field_name == "ModelChoiceField":
                 source = [x.__str__() for x in field._queryset]
-                type_header = """
-					{
-						type: 'dropdown',
-						title: '%s',
-						width: 150,
-						source: %s
-					}
-				""" % (
-                    self.header[i],
-                    source,
-                )
-                type_header = " ".join(type_header.split())
+                type_header = column_header("ModelChoiceField", self.header[i], source)
             header.append(type_header)
 
         datajs += str(header).replace('"', "").replace(",,", ",") + "})"
@@ -293,63 +243,7 @@ class DjangoSheetFormView(FormView):
         post_url = reverse_lazy(current_url)
 
         # make fetch post JS
-        fetch_post = """
-        setInterval(function() {get_rows_table()}, %s)
-
-        function get_rows_table() {
-            var t = document.getElementsByClassName('jexcel')[0]
-            var trs = t.getElementsByTagName("tr");
-            var tds = null;
-            
-            var data_j = {};
-            for (var i=1; i<trs.length; i++)
-            {
-                array_data = [];
-                tds = trs[i].getElementsByTagName("td");
-                for (var n=1; n<tds.length;n++)
-                {
-                    array_data.push(tds[n].innerHTML);
-                };
-                data_j[i] = array_data;
-            }
-            update_rows(data_j)
-        }
-        
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        
-        function update_rows(data_j) {
-            fetch("%s", {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": getCookie("csrftoken"),
-                        "Accept": "application/json",
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data_j)
-                }
-            ).then(res => {
-                    <!--console.log("Request complete!");-->
-                }
-            );
-        }
-        """ % (
-            self.TIME_UPDATE,
-            post_url,
-        )
+        fetch_post = get_fetch_js() % (self.TIME_UPDATE, post_url)
 
         # make and put scripts in fetch_post.js in jspath dir
         jsfile = self.jspath + "/fetch_post.js"
