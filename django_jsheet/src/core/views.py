@@ -138,19 +138,16 @@ class DjangoSheetFormView(FormView):
             if sync_db:
                 # prepopulate/sync datajs if exist model and data row in model
                 datajs += self.prepopulate_datajs()
-                empty_row = str(["" for _ in range(len(self.header))])
-                datajs += ",".join([empty_row for _ in range(self.empty_row)])
+                datajs += self.get_emtpy_row()
             elif os.path.exists(self.filelog):
                 with open(self.filelog) as fn:
                     last_log = fn.readlines()[-1]
                 datajs += last_log.split("_GMT__")[1]
                 # write empty row
                 if not os.path.exists(self.filelog):
-                    empty_row = str(["" for _ in range(len(self.header))])
-                    datajs += ",".join([empty_row for _ in range(self.empty_row)])
+                    datajs += self.get_emtpy_row()
             else:
-                empty_row = str(["" for _ in range(len(self.header))])
-                datajs += ",".join([empty_row for _ in range(self.empty_row)])
+                datajs += self.get_emtpy_row()
             datajs += "];"
         else:
             datajs += str(data) + ";"
@@ -204,6 +201,13 @@ class DjangoSheetFormView(FormView):
                     datetime.now().strftime(space_txt + "%d/%m/%Y_%H:%M:%S_GMT__") + datalog
             )
             fl.write(log_rows)
+
+    def get_emtpy_row(self, nr_row: int = None) -> str:
+        if nr_row is None:
+            nr_row = self.empty_row
+
+        empty_row = str(["" for _ in range(len(self.header))])
+        return ",".join([empty_row for _ in range(nr_row)])
 
     def jsheadersheet(self):
         datajs = """
