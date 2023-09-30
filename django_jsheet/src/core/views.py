@@ -235,7 +235,9 @@ class DjangoSheetFormView(FormView):
                 type_header = column_header("FileField", self.header[i])
             if field_name == "TypedChoiceField":
                 source = [x[1] for x in field._choices]
-                type_header = column_header("TypedChoiceField", self.header[i], source)
+                type_header = column_header(
+                    "TypedChoiceField", self.header[i], source
+                ).replace("'['", "['").replace("']'", "']")
             if field_name == "ModelChoiceField":
                 source = [x.__str__() for x in field._queryset]
                 type_header = column_header("ModelChoiceField", self.header[i], source)
