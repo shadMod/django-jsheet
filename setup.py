@@ -12,7 +12,7 @@ def get_install_requires() -> list:
     fname = os.path.join(os.path.dirname(__file__), "requirements.txt")
     targets = []
     if os.path.exists(fname):
-        with open(fname, 'r') as f:
+        with open(fname, "r") as f:
             targets = f.read().splitlines()
     return targets
 
@@ -22,14 +22,14 @@ setuptools.setup(
     version=__version__,
     author="shadMod",
     author_email="support@shadmod.it",
-    description="Little tools to render a simple excel sheet in webpage",
+    description="Little tools to render a simple spreadsheet in webpage",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/shadMod/django-jsheet",
     download_url=f"https://github.com/shadMod/django-jsheet/archive/refs/tags/{__version__}.tar.gz",
     project_urls={
-        'Documentation': 'https://docs.shadmod.it/django_jsheet/index',
-        'GitHub': 'https://github.com/shadMod/django-jsheet/',
+        "Documentation": "https://docs.shadmod.it/django_jsheet/index",
+        "GitHub": "https://github.com/shadMod/django-jsheet/",
         "Bug Tracker": "https://github.com/shadMod/django-jsheet/issues/",
     },
     classifiers=[
@@ -44,8 +44,19 @@ setuptools.setup(
         "Programming Language :: Python :: 3.11",
     ],
     packages=[
-        "django_jsheet", "django_jsheet.src.core", "django_jsheet.src.templatetags",
+        "django_jsheet",
+        "django_jsheet.src.core",
+        "django_jsheet.src.templatetags",
     ],
-    install_requires=get_install_requires(),
-    python_requires=">=3.8"
+    install_requires=(
+            get_install_requires()
+            + ["django_jsheet_assets @ git+https://github.com/shadMod/django_jsheet_assets.git"]
+    ),
+    data_files=[
+        (
+            "assets",
+            [fn for fn in glob.iglob("django_jsheet/src/core/assets/**/*", recursive=True) if "." in fn],
+        ),
+    ],
+    python_requires=">=3.8",
 )
