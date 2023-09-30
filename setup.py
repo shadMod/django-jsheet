@@ -1,7 +1,8 @@
 import os
+import glob
 import setuptools
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
