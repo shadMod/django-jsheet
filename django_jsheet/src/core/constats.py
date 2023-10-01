@@ -1,7 +1,7 @@
 import os
 import json
 
-BASE_PATH = os.path.dirname(__file__)
+BASE_PATH = os.path.dirname(__file__).split("lib/python3.11")[0] + "/libs"
 
 
 def get_type_header(field: str) -> str:
