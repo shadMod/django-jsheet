@@ -1,11 +1,10 @@
-import os
 import json
 
-BASE_PATH = os.path.dirname(__file__).split("lib/python3.11")[0] + "/libs"
+from django.conf import settings
 
 
 def get_type_header(field: str) -> str:
-    with open(BASE_PATH + "/assets/constats.json") as fn:
+    with open(settings.BASE_PATH_LIBS + "/assets/constats.json") as fn:
         data = json.loads(fn.read())[field]
 
     res = json.dumps(data)
@@ -25,7 +24,7 @@ def column_header(field: str, value: str, source: list = None) -> str:
 
 
 def get_fetch_js() -> str:
-    with open(BASE_PATH + "/assets/fetch_js.js") as fn:
+    with open(settings.BASE_PATH_LIBS + "/assets/fetch_js.js") as fn:
         val = fn.read()
 
     return val
