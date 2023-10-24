@@ -32,6 +32,11 @@
 		"title": "%s",
 		"width": 120
 	},
+	"ImageField": {
+		"type": "image",
+		"title": "%s",
+		"width": 400
+	},
 	"FileField": {
 		"type": "text",
 		"title": "%s",

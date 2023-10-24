@@ -245,6 +245,8 @@ class DjangoSheetFormView(FormView):
                 type_header = column_header("DateField", self.header[i])
             if field_name == "DateTimeField":
                 type_header = column_header("DateTimeField", self.header[i])
+            if field_name == "ImageField":
+                type_header = column_header("ImageField", self.header[i])
             if field_name == "FileField":
                 type_header = column_header("FileField", self.header[i])
             if field_name in ["ChoiceField", "TypedChoiceField"]:
