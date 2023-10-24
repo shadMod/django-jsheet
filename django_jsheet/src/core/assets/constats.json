@@ -14,15 +14,13 @@
 		"type": "numeric",
 		"title": "%s",
 		"width": 120,
-		"decimal": ",",
-		"mask": "$ #.##,00"
+		"decimal": ","
 	},
 	"DecimalField": {
 		"type": "numeric",
 		"title": "%s",
 		"width": 120,
-		"decimal": ",",
-		"mask": "0.00"
+		"decimal": ","
 	},
 	"DateField": {
 		"type": "calendar",
