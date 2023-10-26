@@ -182,8 +182,9 @@ class DjangoSheetFormView(FormView):
         else:
             datajs += str(data) + ";"
 
-        with open(self.jsdata, "w") as fl:
-            fl.write(datajs)
+        if not self.jsdata.split("/")[-1] == 'None.js':
+            with open(self.jsdata, "w") as fl:
+                fl.write(datajs)
 
     def prepopulate_datajs(self):
         datajs = ""
