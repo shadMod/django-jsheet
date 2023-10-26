@@ -40,19 +40,28 @@ class DjangoSheetFormView(FormView):
     SVIL: bool = False
     TIME_UPDATE: int = 10000
     SYNC_DB: bool = False
+    DIR_DATA = "data"
 
     def __init__(self, *args, **kwargs):
         super(DjangoSheetFormView, self).__init__(*args, **kwargs)
+        self.filename = "data_1"
+        self.jsdata = None
+        self.path_filelog = None
+        self.filelog = None
+
+        if settings.DEBUG is True:
+            self.SVIL = True
+
+        self.jspath = self.mk_jspath()
+
         if not self.header:
             self.header = list(self.form_class.base_fields.keys())
         else:
             self.header_validator()
 
-        self.jspath = self.mk_jspath()
-        self.jsdata = self.jspath + "/data.js"
-
-        if settings.DEBUG is True:
-            self.SVIL = True
+    def dispatch(self, *args, **kwargs):
+        self.filename = kwargs.get("sheet", "data_1")
+        self.jsdata = f"{self.jspath}/{self.filename}.js"
 
         # init file log paths
         if self.HISTORY:
@@ -60,29 +69,37 @@ class DjangoSheetFormView(FormView):
         else:
             self.path_filelog, self.filelog = None, None
 
-        # make data.js with data model and empty rows
+        # make data_x.js with data model and empty rows
         self.make_data_js(sync_db=self.SYNC_DB)
 
         # read populate file log
         self.jsheadersheet()
 
-    def dispatch(self, *args, **kwargs):
         # added fetch post file
         self.make_fetch_js()
-
-        if self.request.method == "POST":
-            res, msg = self.save()
-            if res:
-                result = {
-                    "result": {
-                        "success": msg,
-                    },
-                }
-                json_data = json.dumps(result)
-                return HttpResponse(json_data, content_type="application/json")
-            else:
-                logger.error(msg)
         return super().dispatch(*args, *kwargs)
+
+    def post(self, request, *args, **kwargs):
+        res, msg = self.save()
+        if res:
+            result = {
+                "result": {
+                    "success": msg,
+                },
+            }
+            json_data = json.dumps(result)
+            return HttpResponse(json_data, content_type="application/json")
+        else:
+            logger.error(msg)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["FOLDER"] = self.DIR_DATA
+        context["FILENAME"] = self.filename
+        context["SHEETS"] = ",".join(
+            [f.replace(".js", "") for f in os.listdir(self.jspath)]
+        )
+        return context
 
     def save(self):
         try:
