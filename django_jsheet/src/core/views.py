@@ -133,20 +133,19 @@ class DjangoSheetFormView(FormView):
                 self.header.extend(["" for _ in range(nr_base_fields - nr_header)])
 
     def mk_jspath(self) -> str:
-        jspath = str(self.LOGROOT) + "/jsheet/js/"
-        if not os.path.exists(jspath):
-            os.makedirs(jspath)
+        jspath = f"{self.LOGROOT}/jsheet/js/{self.DIR_DATA}"
+        os.makedirs(jspath, exist_ok=True)
         return jspath
 
     def mk_file_log(self) -> (str, str):
         path_logs = str(self.LOGROOT) + "/jsheet/"
-        if not os.path.exists(path_logs):
-            os.makedirs(path_logs)
+        os.makedirs(path_logs, exist_ok=True)
 
         if self.SVIL:
             now_ = datetime.now().strftime("%d%m%Y")
         else:
             now_ = datetime.now().strftime("%d%m%Y_%H%M%S")
+
         # init filelog
         filelog = path_logs + "datalog_" + now_ + ".log"
         return path_logs, filelog
@@ -277,19 +276,19 @@ class DjangoSheetFormView(FormView):
             header.append(type_header)
 
         datajs += str(header).replace('"', "").replace(",,", ",") + "})"
-        jsfile = self.jspath + "/header.js"
+        jsfile = os.path.join(self.jspath, "..", "header.js")
         with open(jsfile, "w") as fl:
             fl.write(datajs)
 
     def make_fetch_js(self):
         # get current url and relative path url
         current_url = self.request.resolver_match.view_name
-        post_url = reverse_lazy(current_url)
+        post_url = reverse_lazy(current_url, kwargs={'sheet': self.filename})
 
         # make fetch post JS
         fetch_post = get_fetch_js() % (self.TIME_UPDATE, post_url)
 
         # make and put scripts in fetch_post.js in jspath dir
-        jsfile = self.jspath + "/fetch_post.js"
+        jsfile = os.path.join(self.jspath, "..", "fetch_post.js")
         with open(jsfile, "w") as fl:
             fl.write(fetch_post)
