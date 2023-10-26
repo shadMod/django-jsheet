@@ -40,19 +40,28 @@ class DjangoSheetFormView(FormView):
     SVIL: bool = False
     TIME_UPDATE: int = 10000
     SYNC_DB: bool = False
+    DIR_DATA = "data"
 
     def __init__(self, *args, **kwargs):
         super(DjangoSheetFormView, self).__init__(*args, **kwargs)
+        self.filename = "data_1"
+        self.jsdata = None
+        self.path_filelog = None
+        self.filelog = None
+
+        if settings.DEBUG is True:
+            self.SVIL = True
+
+        self.jspath = self.mk_jspath()
+
         if not self.header:
             self.header = list(self.form_class.base_fields.keys())
         else:
             self.header_validator()
 
-        self.jspath = self.mk_jspath()
-        self.jsdata = self.jspath + "/data.js"
-
-        if settings.DEBUG is True:
-            self.SVIL = True
+    def dispatch(self, *args, **kwargs):
+        self.filename = kwargs.get("sheet", "data_1")
+        self.jsdata = f"{self.jspath}/{self.filename}.js"
 
         # init file log paths
         if self.HISTORY:
@@ -60,29 +69,37 @@ class DjangoSheetFormView(FormView):
         else:
             self.path_filelog, self.filelog = None, None
 
-        # make data.js with data model and empty rows
+        # make data_x.js with data model and empty rows
         self.make_data_js(sync_db=self.SYNC_DB)
 
         # read populate file log
         self.jsheadersheet()
 
-    def dispatch(self, *args, **kwargs):
         # added fetch post file
         self.make_fetch_js()
-
-        if self.request.method == "POST":
-            res, msg = self.save()
-            if res:
-                result = {
-                    "result": {
-                        "success": msg,
-                    },
-                }
-                json_data = json.dumps(result)
-                return HttpResponse(json_data, content_type="application/json")
-            else:
-                logger.error(msg)
         return super().dispatch(*args, *kwargs)
+
+    def post(self, request, *args, **kwargs):
+        res, msg = self.save()
+        if res:
+            result = {
+                "result": {
+                    "success": msg,
+                },
+            }
+            json_data = json.dumps(result)
+            return HttpResponse(json_data, content_type="application/json")
+        else:
+            logger.error(msg)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["FOLDER"] = self.DIR_DATA
+        context["FILENAME"] = self.filename
+        context["SHEETS"] = ",".join(
+            [f.replace(".js", "") for f in os.listdir(self.jspath)]
+        )
+        return context
 
     def save(self):
         try:
@@ -92,7 +109,7 @@ class DjangoSheetFormView(FormView):
             return False, ex
 
         data = []
-        for i, row in data_row.items():
+        for row in data_row.values():
             data.append(row)
 
         try:
@@ -116,20 +133,19 @@ class DjangoSheetFormView(FormView):
                 self.header.extend(["" for _ in range(nr_base_fields - nr_header)])
 
     def mk_jspath(self) -> str:
-        jspath = str(self.LOGROOT) + "/jsheet/js/"
-        if not os.path.exists(jspath):
-            os.makedirs(jspath)
+        jspath = f"{self.LOGROOT}/jsheet/js/{self.DIR_DATA}"
+        os.makedirs(jspath, exist_ok=True)
         return jspath
 
     def mk_file_log(self) -> (str, str):
         path_logs = str(self.LOGROOT) + "/jsheet/"
-        if not os.path.exists(path_logs):
-            os.makedirs(path_logs)
+        os.makedirs(path_logs, exist_ok=True)
 
         if self.SVIL:
             now_ = datetime.now().strftime("%d%m%Y")
         else:
             now_ = datetime.now().strftime("%d%m%Y_%H%M%S")
+
         # init filelog
         filelog = path_logs + "datalog_" + now_ + ".log"
         return path_logs, filelog
@@ -166,8 +182,9 @@ class DjangoSheetFormView(FormView):
         else:
             datajs += str(data) + ";"
 
-        with open(self.jsdata, "w") as fl:
-            fl.write(datajs)
+        if not self.jsdata.split("/")[-1] == 'None.js':
+            with open(self.jsdata, "w") as fl:
+                fl.write(datajs)
 
     def prepopulate_datajs(self):
         datajs = ""
@@ -260,19 +277,19 @@ class DjangoSheetFormView(FormView):
             header.append(type_header)
 
         datajs += str(header).replace('"', "").replace(",,", ",") + "})"
-        jsfile = self.jspath + "/header.js"
+        jsfile = os.path.join(self.jspath, "..", "header.js")
         with open(jsfile, "w") as fl:
             fl.write(datajs)
 
     def make_fetch_js(self):
         # get current url and relative path url
         current_url = self.request.resolver_match.view_name
-        post_url = reverse_lazy(current_url)
+        post_url = reverse_lazy(current_url, kwargs={'sheet': self.filename})
 
         # make fetch post JS
         fetch_post = get_fetch_js() % (self.TIME_UPDATE, post_url)
 
         # make and put scripts in fetch_post.js in jspath dir
-        jsfile = self.jspath + "/fetch_post.js"
+        jsfile = os.path.join(self.jspath, "..", "fetch_post.js")
         with open(jsfile, "w") as fl:
             fl.write(fetch_post)
