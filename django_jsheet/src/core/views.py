@@ -109,7 +109,7 @@ class DjangoSheetFormView(FormView):
             return False, ex
 
         data = []
-        for i, row in data_row.items():
+        for row in data_row.values():
             data.append(row)
 
         try:
