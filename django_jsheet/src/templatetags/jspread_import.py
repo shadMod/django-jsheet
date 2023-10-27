@@ -11,7 +11,8 @@ def display_bottom_sheet(sheets: str, url_name: str, style_cl: str = None, style
     if style_id is None:
         style_id = ""
 
-    sheets = sheets.split(",")
+    sheets = sorted(sheets.split(","))
+
     html = []
     for name in sheets:
         _button = f"""
