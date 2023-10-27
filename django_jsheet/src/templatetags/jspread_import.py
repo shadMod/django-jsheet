@@ -19,6 +19,14 @@ def display_bottom_sheet(sheets: str, url_name: str, style_cl: str = None, style
 value='{name}' class='{style_cl}' id='{style_id}' />
         """
         html.append(_button)
+
+    nr_sheet = int(name.replace("data_", "")) + 1
+    html.append(
+        f"""
+<input type='button' onclick='location.href="/{url_name}/data_{nr_sheet}/";'
+value='+' class='{style_cl}' id='{style_id}' />
+    """
+    )
     return mark_safe("".join(html))
 
 
